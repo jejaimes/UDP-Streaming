@@ -107,7 +107,7 @@ while 1:
                 frame = numpy.frombuffer(frame, dtype=numpy.uint8)
                 frame = frame.reshape(180, 320)
                 cv2.imshow("frame", frame)
-            if cv2.waitKey(100) & 0xFF == ord('q'):
+            if cv2.waitKey(33) & 0xFF == ord('q'):
                 break
         cv2.destroyWindow('frame')
         cv2.destroyAllWindows()

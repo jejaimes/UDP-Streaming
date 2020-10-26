@@ -50,6 +50,7 @@ def thread(video,ip,port):
                 break
             data = struct.pack('>I', n)
             data = data + s
+            print("Enviando frame",n)
             sock.sendto(data,multicast_group)
             #d = frame.flatten()
             #s = d.tostring()
@@ -59,7 +60,7 @@ def thread(video,ip,port):
             #    data = data + s[i * 57600:(i + 1) * 57600] #34560 57600 6912
             #    print("Enviando data",n,"parte",i,"del video "+video)
             #    sock.sendto(data, multicast_group)
-            if cv2.waitKey(100) & 0xFF == ord('q'):
+            if cv2.waitKey(33) & 0xFF == ord('q'):
                 break
 
     finally:
