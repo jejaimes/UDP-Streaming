@@ -40,6 +40,8 @@ def thread(video,ip,port):
         while True:
             n+=1
             ret, frame = cap.read()
+            if not ret:
+                continue
             frame = cv2.resize(frame, (320, 180))
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             s = gray.tostring()
@@ -50,7 +52,7 @@ def thread(video,ip,port):
                 break
             data = struct.pack('>I', n)
             data = data + s
-            print("Enviando frame",n)
+            print("Enviando frame",n,"de",video)
             sock.sendto(data,multicast_group)
             #d = frame.flatten()
             #s = d.tostring()
