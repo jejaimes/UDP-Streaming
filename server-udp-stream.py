@@ -37,16 +37,16 @@ def thread(video,ip,port):
         # Send data to the multicast group
         # print('sending {!r}'.format(message))
         cap = cv2.VideoCapture(video)
-        n = 0
-        t1 = time.time()
+        #n = 0
+        #t1 = time.time()
         # Look for responses from all recipients
         while True:
-            n+=1
+            #n+=1
             ret, frame = cap.read()
             #cv2.imshow('frame', frame)
             if not ret:
-                t2 = time.time()
-                print("Problema en read(se acabo?)",video,n,t2-t1)
+                #t2 = time.time()
+                print("Se acabo el video",video)#,n,t2-t1)
                 break
             d = frame.flatten()
             s = d.tostring()
@@ -54,7 +54,7 @@ def thread(video,ip,port):
                 data = struct.pack('>B', i)
                 data = data + s[i * 34560:(i + 1) * 34560]
                 sock.sendto(data, multicast_group)
-                if cv2.waitKey(10) & 0xFF == ord('q'):
+                if cv2.waitKey(33) & 0xFF == ord('q'):
                     break
 
     finally:

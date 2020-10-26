@@ -4,11 +4,14 @@ import numpy
 import cv2
 import heapq
 
-def ordenarbytes(h):
+def ordenarbytes(h,a):
     r = b''
     for i in range(len(h)):
         b = heapq.heappop(h)
-        r+=b[1]
+        if b[0] != i and a[i] != '':
+            r+=a[i]
+        else:
+            r+=b[1]
     return r
 
 while 1:
@@ -50,12 +53,17 @@ while 1:
 
     # Receive/respond loop
     frames = []
+    anteriores = ['','','','','',
+                  '','','','','',
+                  '','','','','',
+                  '','','','','']
     primera = True
 
     while True:
         data, addr = sock.recvfrom(34561)
         n = struct.unpack('>B', data[0:1])
-        heapq.heappush(frames,(n,data[1:]))
+        anteriores[n[0]] = data[1:]
+        heapq.heappush(frames,(n[0],data[1:]))
         if primera:
             if n[0] != 0:
                 print("nada")
@@ -64,9 +72,9 @@ while 1:
                 print("empezamos")
                 primera = False
         if len(frames) == 20:
-            frame = numpy.fromstring(ordenarbytes(frames), dtype=numpy.uint8)
+            frame = numpy.frombuffer(ordenarbytes(frames,anteriores), dtype=numpy.uint8)
             frame = frame.reshape(360, 640, 3)
             cv2.imshow("frame", frame)
             frames = []
-        if cv2.waitKey(10) & 0xFF == ord('q'):
+        if cv2.waitKey(33) & 0xFF == ord('q'):
             break
