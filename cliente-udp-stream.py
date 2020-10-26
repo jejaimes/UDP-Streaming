@@ -45,7 +45,7 @@ def ordenarbytes(h):
 while 1:
     print("Los canales de video disponibles son:")
     print("1. Dead beats")
-    print("2. Live again")
+    print("2. Excuse my rudness but could you please die")
     print("3. Reaper ka Rapper")
     canal = input("Escriba el numero del canal que quiere ver (escriba 4 para terminar la ejecucion): ")
 
@@ -89,14 +89,14 @@ while 1:
     try:
         c = 0
         while not clicked:
-            data, addr = sock.recvfrom(57604)#57601 34561
+            data, addr = sock.recvfrom(57604)#57604 34564 6916
             c += 1
             n = struct.unpack('>I', data[0:4])
             print("Recibio data",n[0])
             heapq.heappush(frames,(n[0],data[4:]))
             if c < 1200:
                 continue
-            if len(frames) >= 12:#12 20
+            if len(frames) >= 12:#12 20 100
                 frame = ordenarbytes(frames)
                 frame = numpy.frombuffer(frame, dtype=numpy.uint8)
                 frame = frame.reshape(360, 640, 3)
