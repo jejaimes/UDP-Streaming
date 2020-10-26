@@ -16,7 +16,6 @@ class StreamingThread (threading.Thread):
       print ("Exiting " + self.video)
 
 def thread(video,ip,port):
-    print("Empezo thread",video)
     time.sleep(1)
     multicast_group = (ip, port)
 
@@ -37,7 +36,7 @@ def thread(video,ip,port):
         # Send data to the multicast group
         # print('sending {!r}'.format(message))
         cap = cv2.VideoCapture(video)
-        #n = 0
+        n = 0
         #t1 = time.time()
         # Look for responses from all recipients
         while True:
@@ -50,12 +49,14 @@ def thread(video,ip,port):
                 break
             d = frame.flatten()
             s = d.tostring()
-            for i in range(20):
-                data = struct.pack('>B', i)
-                data = data + s[i * 34560:(i + 1) * 34560]
+            for i in range(12): #20
+                n+=1
+                data = struct.pack('>I', n)
+                data = data + s[i * 57600:(i + 1) * 57600] #34560 57600
+                print("Enviando data",n,"parte",i,"del video "+video)
                 sock.sendto(data, multicast_group)
-                if cv2.waitKey(33) & 0xFF == ord('q'):
-                    break
+            if cv2.waitKey(33) & 0xFF == ord('q'):
+                break
 
     finally:
         print('closing socket')

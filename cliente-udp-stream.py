@@ -1,18 +1,46 @@
 import socket
 import struct
+import sys
 import numpy
 import cv2
 import heapq
+#import threading
+#import time
 
-def ordenarbytes(h,a):
+recibiendo = False
+clicked = False
+frames = []
+
+def onMouse(event, x, y, flags, param):
+    global clicked
+    if event == cv2.EVENT_LBUTTONUP:
+        clicked = True
+
+def ordenarbytes(h):
     r = b''
-    for i in range(len(h)):
+    for i in range(12):
         b = heapq.heappop(h)
-        if b[0] != i and a[i] != '':
-            r+=a[i]
-        else:
-            r+=b[1]
+        r+=b[1]
     return r
+
+#def mostrar(heap,click):
+#    time.sleep(3)
+#    while not click:
+#        if len(heap) >= 12:  # 12 20
+#            framed = ordenarbytes(heap)
+#            framed = numpy.frombuffer(framed, dtype=numpy.uint8)
+#            framed = framed.reshape(360, 640, 3)
+#            cv2.imshow("frame", framed)
+#
+#class Muestra(threading.Thread):
+#   def __init__(self, heap, click):
+#      threading.Thread.__init__(self)
+#      self.heap = heap
+#      self.click = click
+#   def run(self):
+#      print ("Starting viewing")
+#      mostrar(self.heap,self.click)
+#      print ("Finished viewing")
 
 while 1:
     print("Los canales de video disponibles son:")
@@ -50,31 +78,45 @@ while 1:
         socket.IPPROTO_IP,
         socket.IP_ADD_MEMBERSHIP,
         mreq)
-
+    sock.settimeout(2)
     # Receive/respond loop
-    frames = []
-    anteriores = ['','','','','',
-                  '','','','','',
-                  '','','','','',
-                  '','','','','']
-    primera = True
+    cv2.namedWindow('frame')
+    cv2.setMouseCallback('frame', onMouse)
 
-    while True:
-        data, addr = sock.recvfrom(34561)
-        n = struct.unpack('>B', data[0:1])
-        anteriores[n[0]] = data[1:]
-        heapq.heappush(frames,(n[0],data[1:]))
-        if primera:
-            if n[0] != 0:
-                print("nada")
+    #video = Muestra(frames,clicked)
+    #video.start()
+    #video.join()
+    try:
+        c = 0
+        while not clicked:
+            data, addr = sock.recvfrom(57604)#57601 34561
+            c += 1
+            n = struct.unpack('>I', data[0:4])
+            print("Recibio data",n[0])
+            heapq.heappush(frames,(n[0],data[4:]))
+            if c < 1200:
                 continue
-            else:
-                print("empezamos")
-                primera = False
-        if len(frames) == 20:
-            frame = numpy.frombuffer(ordenarbytes(frames,anteriores), dtype=numpy.uint8)
-            frame = frame.reshape(360, 640, 3)
-            cv2.imshow("frame", frame)
-            frames = []
-        if cv2.waitKey(33) & 0xFF == ord('q'):
-            break
+            if len(frames) >= 12:#12 20
+                frame = ordenarbytes(frames)
+                frame = numpy.frombuffer(frame, dtype=numpy.uint8)
+                frame = frame.reshape(360, 640, 3)
+                cv2.imshow("frame", frame)
+            if cv2.waitKey(33) & 0xFF == ord('q'):
+                break
+        cv2.destroyWindow('frame')
+        cv2.destroyAllWindows()
+        clicked = False
+    except socket.timeout as e:
+        err = e.args[0]
+        # this next if/else is a bit redundant, but illustrates how the
+        # timeout exception is setup
+        if err == 'timed out':
+            print('se acabo la transmision')
+            sys.exit(0)
+        else:
+            print(e)
+            sys.exit(1)
+    except socket.error as e:
+        # Something else happened, handle error, exit, etc.
+        print(e)
+        sys.exit(1)
