@@ -34,28 +34,32 @@ def thread(video,ip,port):
     try:
 
         # Send data to the multicast group
-        # print('sending {!r}'.format(message))
         cap = cv2.VideoCapture(video)
         n = 0
         #t1 = time.time()
-        # Look for responses from all recipients
         while True:
-            #n+=1
+            n+=1
             ret, frame = cap.read()
+            frame = cv2.resize(frame, (320, 180))
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            s = gray.tostring()
             #cv2.imshow('frame', frame)
             if not ret:
                 #t2 = time.time()
                 print("Se acabo el video",video)#,n,t2-t1)
                 break
-            d = frame.flatten()
-            s = d.tostring()
-            for i in range(12): #20 12 100
-                n+=1
-                data = struct.pack('>I', n)
-                data = data + s[i * 57600:(i + 1) * 57600] #34560 57600 6912
-                print("Enviando data",n,"parte",i,"del video "+video)
-                sock.sendto(data, multicast_group)
-            if cv2.waitKey(33) & 0xFF == ord('q'):
+            data = struct.pack('>I', n)
+            data = data + s
+            sock.sendto(data,multicast_group)
+            #d = frame.flatten()
+            #s = d.tostring()
+            #for i in range(12): #20 12 100
+            #    n+=1
+            #    data = struct.pack('>I', n)
+            #    data = data + s[i * 57600:(i + 1) * 57600] #34560 57600 6912
+            #    print("Enviando data",n,"parte",i,"del video "+video)
+            #    sock.sendto(data, multicast_group)
+            if cv2.waitKey(100) & 0xFF == ord('q'):
                 break
 
     finally:
@@ -64,9 +68,9 @@ def thread(video,ip,port):
 
 
 # Create new threads
-thread1 = StreamingThread('DEAD BEATS.mp4','224.3.29.71',10000)
-thread2 = StreamingThread('RIP.mp4','224.3.29.72',10001)
-thread3 = StreamingThread('Reaper ka Rapper.mp4','224.3.29.73',10002)
+thread1 = StreamingThread('DEAD BEATS.mp4','224.3.29.74',10000)
+thread2 = StreamingThread('RIP.mp4','224.3.29.75',10001)
+thread3 = StreamingThread('Reaper ka Rapper.mp4','224.3.29.76',10002)
 
 # Start new Threads
 thread1.start()

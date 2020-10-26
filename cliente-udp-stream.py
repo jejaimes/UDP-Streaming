@@ -55,13 +55,13 @@ while 1:
     if canal == str(4):
         break
     elif canal == str(1):
-        multicast_group = '224.3.29.71'
+        multicast_group = '224.3.29.74'
         server_address = ('', 10000)
     elif canal == str(2):
-        multicast_group = '224.3.29.72'
+        multicast_group = '224.3.29.75'
         server_address = ('', 10001)
     elif canal == str(3):
-        multicast_group = '224.3.29.73'
+        multicast_group = '224.3.29.76'
         server_address = ('', 10002)
 
     # Create the socket
@@ -78,7 +78,7 @@ while 1:
         socket.IPPROTO_IP,
         socket.IP_ADD_MEMBERSHIP,
         mreq)
-    sock.settimeout(2)
+    sock.settimeout(10)
     # Receive/respond loop
     cv2.namedWindow('frame')
     cv2.setMouseCallback('frame', onMouse)
@@ -89,19 +89,25 @@ while 1:
     try:
         c = 0
         while not clicked:
-            data, addr = sock.recvfrom(57604)#57604 34564 6916
+            data, addr = sock.recvfrom(57716)#57604 34564 6916
             c += 1
             n = struct.unpack('>I', data[0:4])
             print("Recibio data",n[0])
             heapq.heappush(frames,(n[0],data[4:]))
-            if c < 1200:
-                continue
-            if len(frames) >= 12:#12 20 100
-                frame = ordenarbytes(frames)
+            #if c < 1200:
+            #    continue
+            #if len(frames) >= 12:#12 20 100
+            #    frame = ordenarbytes(frames)
+            #    frame = numpy.frombuffer(frame, dtype=numpy.uint8)
+            #    frame = frame.reshape(360, 640)
+            #    cv2.imshow("frame", frame)
+            if len(frames) >= 1:
+                frame = heapq.heappop(frames)
+                frame = frame[1]
                 frame = numpy.frombuffer(frame, dtype=numpy.uint8)
-                frame = frame.reshape(360, 640, 3)
+                frame = frame.reshape(180, 320)
                 cv2.imshow("frame", frame)
-            if cv2.waitKey(33) & 0xFF == ord('q'):
+            if cv2.waitKey(100) & 0xFF == ord('q'):
                 break
         cv2.destroyWindow('frame')
         cv2.destroyAllWindows()
