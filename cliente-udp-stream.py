@@ -2,6 +2,14 @@ import socket
 import struct
 import numpy
 import cv2
+import heapq
+
+def ordenarbytes(h):
+    r = b''
+    for i in range(len(h)):
+        b = heapq.heappop(h)
+        r+=b[1]
+    return r
 
 while 1:
     print("Los canales de video disponibles son:")
@@ -25,7 +33,6 @@ while 1:
         multicast_group = '224.3.29.73'
         server_address = ('', 10002)
 
-
     # Create the socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -42,26 +49,24 @@ while 1:
         mreq)
 
     # Receive/respond loop
-    s = b''
+    frames = []
     primera = True
 
     while True:
         data, addr = sock.recvfrom(34561)
-        s += data[1:]
+        n = struct.unpack('>B', data[0:1])
+        heapq.heappush(frames,(n,data[1:]))
         if primera:
-            n = struct.unpack('>B', data[0:1])
             if n[0] != 0:
                 print("nada")
                 continue
             else:
                 print("empezamos")
                 primera = False
-            s = b''
-        if len(s) == (34560 * 20):
-            frame = numpy.fromstring(s, dtype=numpy.uint8)
+        if len(frames) == 20:
+            frame = numpy.fromstring(ordenarbytes(frames), dtype=numpy.uint8)
             frame = frame.reshape(360, 640, 3)
             cv2.imshow("frame", frame)
-
-            s = b''
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+            frames = []
+        if cv2.waitKey(10) & 0xFF == ord('q'):
             break
