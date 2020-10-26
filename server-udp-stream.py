@@ -39,21 +39,19 @@ def thread(video,ip,port):
         #t1 = time.time()
         while True:
             n+=1
-            ret, frame = cap.read()
-            if not ret:
-                continue
-            frame = cv2.resize(frame, (320, 180))
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            s = gray.tostring()
-            #cv2.imshow('frame', frame)
-            if not ret:
+            ret, frame = cap.read()#Lee un frame
+            if not ret: #Si ret es True se leyo correctamente el frame
                 #t2 = time.time()
                 print("Se acabo el video",video)#,n,t2-t1)
                 break
+            frame = cv2.resize(frame, (320, 180)) #Cambia el tamano del video
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #Cambia el color del video
+            s = gray.tostring()
             data = struct.pack('>I', n)
-            data = data + s
+            data = data + s #Pega un id al frame
             print("Enviando frame",n,"de",video)
-            sock.sendto(data,multicast_group)
+            sock.sendto(data,multicast_group) #Envia el frame
+            #Envio de datos dividiendo el frame en pedazos
             #d = frame.flatten()
             #s = d.tostring()
             #for i in range(12): #20 12 100

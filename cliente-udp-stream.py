@@ -117,7 +117,7 @@ while 1:
         # this next if/else is a bit redundant, but illustrates how the
         # timeout exception is setup
         if err == 'timed out':
-            print('se acabo la transmision')
+            print('Se acabo la transmision')
             sys.exit(0)
         else:
             print(e)
