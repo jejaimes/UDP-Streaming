@@ -4,45 +4,26 @@ import sys
 import numpy
 import cv2
 import heapq
-#import threading
-#import time
 
-recibiendo = False
 clicked = False
-frames = []
+frames = [] # Lista que se utilizara como pri
 
+# Funcion para detectar cuando se hace click en el video
 def onMouse(event, x, y, flags, param):
     global clicked
     if event == cv2.EVENT_LBUTTONUP:
         clicked = True
 
-def ordenarbytes(h):
-    r = b''
-    for i in range(12):
-        b = heapq.heappop(h)
-        r+=b[1]
-    return r
-
-#def mostrar(heap,click):
-#    time.sleep(3)
-#    while not click:
-#        if len(heap) >= 12:  # 12 20
-#            framed = ordenarbytes(heap)
-#            framed = numpy.frombuffer(framed, dtype=numpy.uint8)
-#            framed = framed.reshape(360, 640, 3)
-#            cv2.imshow("frame", framed)
-#
-#class Muestra(threading.Thread):
-#   def __init__(self, heap, click):
-#      threading.Thread.__init__(self)
-#      self.heap = heap
-#      self.click = click
-#   def run(self):
-#      print ("Starting viewing")
-#      mostrar(self.heap,self.click)
-#      print ("Finished viewing")
+# Ordena los bytes cuando el frame viene partido
+#def ordenarbytes(h):
+#    r = b''
+#    for i in range(12):
+#        b = heapq.heappop(h)
+#        r+=b[1]
+#    return r
 
 while 1:
+    # Imprime el menu en consola
     print("Los canales de video disponibles son:")
     print("1. Dead beats")
     print("2. Excuse my rudness but could you please die")
@@ -52,22 +33,22 @@ while 1:
     multicast_group = ''
     server_address  = ''
 
-    if canal == str(4):
+    if canal == str(4): # Si escriben 4 se detiene la ejecucion del cliente
         break
-    elif canal == str(1):
+    elif canal == str(1): # Primer canal de transmision
         multicast_group = '224.3.29.74'
         server_address = ('', 10000)
-    elif canal == str(2):
+    elif canal == str(2): # Segundo canal de transmision
         multicast_group = '224.3.29.75'
         server_address = ('', 10001)
-    elif canal == str(3):
+    elif canal == str(3): # Tercer canal de transmision
         multicast_group = '224.3.29.76'
         server_address = ('', 10002)
 
-    # Create the socket
+    # Crea el socket UDP
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    # Bind to the server address
+    # Se ata el socket a la direccion correspondiente
     sock.bind(server_address)
 
     # Tell the operating system to add the socket to
@@ -78,51 +59,59 @@ while 1:
         socket.IPPROTO_IP,
         socket.IP_ADD_MEMBERSHIP,
         mreq)
+
+    # Timeout para cuando se deje de recibir data
     sock.settimeout(10)
-    # Receive/respond loop
+
+    # Coloca nombre a la ventana en la que se transmite el video
     cv2.namedWindow('frame')
+    # Se le asigna al la ventana la funcion para detectar el click en el video
     cv2.setMouseCallback('frame', onMouse)
 
-    #video = Muestra(frames,clicked)
-    #video.start()
-    #video.join()
     try:
         c = 0
         while not clicked:
-            data, addr = sock.recvfrom(57716)#57604 34564 6916
+            data, addr = sock.recvfrom(57716)# Se recibe data del socket
             c += 1
             n = struct.unpack('>I', data[0:4])
             print("Recibio data",n[0])
-            heapq.heappush(frames,(n[0],data[4:]))
-            #if c < 1200:
-            #    continue
+            heapq.heappush(frames,(n[0],data[4:])) # Se agrega la tupla id frame al priority queue
+
+            # Para cuando se envia el video partiendo el frame en 12 partes
             #if len(frames) >= 12:#12 20 100
             #    frame = ordenarbytes(frames)
             #    frame = numpy.frombuffer(frame, dtype=numpy.uint8)
             #    frame = frame.reshape(360, 640)
             #    cv2.imshow("frame", frame)
-            if len(frames) >= 1:
-                frame = heapq.heappop(frames)
-                frame = frame[1]
-                frame = numpy.frombuffer(frame, dtype=numpy.uint8)
-                frame = frame.reshape(180, 320)
-                cv2.imshow("frame", frame)
-            if cv2.waitKey(33) & 0xFF == ord('q'):
+
+            if len(frames) >= 1: # Si hay frames disponibles para visualizar
+                frame = heapq.heappop(frames) # Saca una tupla id frame del priority queue
+                frame = frame[1] # Solo la informacion del frame
+                frame = numpy.frombuffer(frame, dtype=numpy.uint8) # Se pasa de bytes a un arreglo numpy
+                frame = frame.reshape(180, 320) # Se pasa a un arreglo
+                cv2.imshow("frame", frame) # Se muestra el frame
+
+            if cv2.waitKey(33) & 0xFF == ord('q'): # Con q se puede detener la visualizacion del video
                 break
-        cv2.destroyWindow('frame')
+         # Cuando se deja de ver el video se destruyen las ventanas
         cv2.destroyAllWindows()
+        # Se vuelve a permitir hacer click para detener el video
         clicked = False
+
+    # Cuando se detecta un time out se asume que se detiene la ejecucion del cliente
     except socket.timeout as e:
         err = e.args[0]
-        # this next if/else is a bit redundant, but illustrates how the
-        # timeout exception is setup
         if err == 'timed out':
             print('Se acabo la transmision')
             sys.exit(0)
         else:
             print(e)
             sys.exit(1)
+    # Ocurrio un error de verdad
     except socket.error as e:
-        # Something else happened, handle error, exit, etc.
         print(e)
         sys.exit(1)
+
+    finally: # Cuando se termina se cierra el socket
+        print('closing socket')
+        sock.close()
